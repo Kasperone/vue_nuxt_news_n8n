@@ -4,8 +4,7 @@ This directory contains the n8n workflow configurations for the Vue & Nuxt News 
 
 ## Structure
 
-- `vue-nuxt-collector.json` - Main workflow file that will be created in Phase 3
-- `test-workflows/` - Test workflows for development (will be created later)
+- `github-releases-collector-final-working.json` - Main working workflow for GitHub releases collection
 
 ## Importing Workflows
 
@@ -24,17 +23,16 @@ When you make changes in n8n:
 4. Save to this directory
 5. Commit to version control
 
-## Workflow Components
+## Current Workflow Components
 
-The main workflow will include:
-- **Schedule Trigger** - Weekly execution
-- **GitHub API nodes** - Fetch Vue/Nuxt releases
-- **RSS Reader nodes** - Fetch blog posts
-- **Dev.to API nodes** - Fetch articles
-- **Claude AI nodes** - Process and format content
-- **Slack nodes** - Send notifications
-- **Obsidian nodes** - Create notes
-- **Error handling nodes** - Manage failures
+The current workflow includes:
+- **Manual Trigger** - For testing (replaces schedule trigger)
+- **GitHub API nodes** - Fetch Vue.js and Nuxt.js releases
+- **Merge node** - Combine release data from both repositories
+- **Code nodes** - Process and format release data
+- **Slack formatting** - Format messages for Slack notifications
+- **Obsidian formatting** - Format content for Obsidian notes
+- **HTTP Request nodes** - Send data to external services
 
 ## Development Notes
 
