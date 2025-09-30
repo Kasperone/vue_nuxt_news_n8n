@@ -1,0 +1,214 @@
+{
+  "name": "GitHub Vue/Nuxt Releases Collector",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "value": "0 9 * * 0"
+            }
+          ]
+        }
+      },
+      "id": "f8a8c0e0-7e7e-4b7e-9c1c-7f7e7e7e7e7e",
+      "name": "Weekly Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/vuejs/core/releases",
+        "options": {
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "per_page",
+                "value": "10"
+              }
+            ]
+          },
+          "headers": {
+            "parameters": [
+              {
+                "name": "Accept",
+                "value": "application/vnd.github.v3+json"
+              },
+              {
+                "name": "User-Agent",
+                "value": "Vue-Nuxt-News-Collector"
+              }
+            ]
+          }
+        }
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Get Vue.js Releases",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/nuxt/nuxt/releases",
+        "options": {
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "per_page",
+                "value": "10"
+              }
+            ]
+          },
+          "headers": {
+            "parameters": [
+              {
+                "name": "Accept",
+                "value": "application/vnd.github.v3+json"
+              },
+              {
+                "name": "User-Agent",
+                "value": "Vue-Nuxt-News-Collector"
+              }
+            ]
+          }
+        }
+      },
+      "id": "b2c3d4e5-f6g7-8901-bcde-f23456789012",
+      "name": "Get Nuxt.js Releases",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        460,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll"
+      },
+      "id": "c3d4e5f6-g7h8-9012-cdef-345678901234",
+      "name": "Combine Releases",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        390
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process and structure GitHub release data\nconst processedReleases = [];\n\nfor (const item of $input.all()) {\n  if (item.json && Array.isArray(item.json)) {\n    for (const release of item.json) {\n      // Determine if this is Vue or Nuxt\n      const isVue = release.html_url.includes('/vuejs/');\n      const isNuxt = release.html_url.includes('/nuxt/');\n      \n      const processedRelease = {\n        framework: isVue ? 'Vue.js' : isNuxt ? 'Nuxt.js' : 'Unknown',\n        version: release.tag_name,\n        name: release.name || release.tag_name,\n        description: release.body ? release.body.substring(0, 500) + '...' : 'No description available',\n        published_date: release.published_at,\n        html_url: release.html_url,\n        draft: release.draft,\n        prerelease: release.prerelease,\n        author: release.author ? release.author.login : 'Unknown',\n        assets_count: release.assets ? release.assets.length : 0,\n        download_count: release.assets ? \n          release.assets.reduce((sum, asset) => sum + (asset.download_count || 0), 0) : 0,\n        created_at: release.created_at,\n        repository: isVue ? 'vuejs/core' : isNuxt ? 'nuxt/nuxt' : 'unknown'\n      };\n      \n      processedReleases.push(processedRelease);\n    }\n  }\n}\n\n// Sort by published date (newest first)\nprocessedReleases.sort((a, b) => new Date(b.published_date) - new Date(a.published_date));\n\nreturn processedReleases.map(release => ({ json: release }));"
+      },
+      "id": "d4e5f6g7-h8i9-0123-defg-456789012345",
+      "name": "Process Release Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        390
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create summary of collected releases\nconst releases = $input.all();\nconst vueReleases = releases.filter(r => r.json.framework === 'Vue.js');\nconst nuxtReleases = releases.filter(r => r.json.framework === 'Nuxt.js');\n\nconst summary = {\n  total_releases: releases.length,\n  vue_releases: vueReleases.length,\n  nuxt_releases: nuxtReleases.length,\n  latest_vue: vueReleases.length > 0 ? vueReleases[0].json : null,\n  latest_nuxt: nuxtReleases.length > 0 ? nuxtReleases[0].json : null,\n  collection_timestamp: new Date().toISOString(),\n  releases: releases.map(r => r.json)\n};\n\nconsole.log('📊 Collection Summary:');\nconsole.log(`Total releases collected: ${summary.total_releases}`);\nconsole.log(`Vue.js releases: ${summary.vue_releases}`);\nconsole.log(`Nuxt.js releases: ${summary.nuxt_releases}`);\nif (summary.latest_vue) {\n  console.log(`Latest Vue.js: ${summary.latest_vue.version}`);\n}\nif (summary.latest_nuxt) {\n  console.log(`Latest Nuxt.js: ${summary.latest_nuxt.version}`);\n}\n\nreturn [{ json: summary }];"
+      },
+      "id": "e5f6g7h8-i9j0-1234-efgh-567890123456",
+      "name": "Create Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        390
+      ]
+    }
+  ],
+  "connections": {
+    "Weekly Schedule": {
+      "main": [
+        [
+          {
+            "node": "Get Vue.js Releases",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Nuxt.js Releases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Vue.js Releases": {
+      "main": [
+        [
+          {
+            "node": "Combine Releases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Nuxt.js Releases": {
+      "main": [
+        [
+          {
+            "node": "Combine Releases",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Combine Releases": {
+      "main": [
+        [
+          {
+            "node": "Process Release Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Release Data": {
+      "main": [
+        [
+          {
+            "node": "Create Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "github-releases-collector",
+  "tags": [
+    {
+      "createdAt": "2024-09-30T09:00:00.000Z",
+      "updatedAt": "2024-09-30T09:00:00.000Z",
+      "id": "vue-nuxt",
+      "name": "vue-nuxt"
+    }
+  ]
+}
