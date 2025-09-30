@@ -159,7 +159,7 @@ sudo netstat -tlnp | grep :5678
 
 ### Workflow Import & Execution
 1. Go to n8n (localhost:5678)
-2. Import workflow: `workflows/github-releases-collector-final-working.json`
+2. Import workflow: `workflows/github-releases-collector.json`
 3. Configure your GitHub token in the workflow nodes
 4. Click "Execute Workflow" to run manually
 

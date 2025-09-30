@@ -4,7 +4,7 @@ This directory contains the n8n workflow configurations for the Vue & Nuxt News 
 
 ## Structure
 
-- `github-releases-collector-final-working.json` - Main working workflow for GitHub releases collection
+- `github-releases-collector.json` - Main workflow for GitHub releases collection
 
 ## Importing Workflows
 
