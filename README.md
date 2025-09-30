@@ -97,10 +97,12 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/...
 
 ## 📊 Data Sources
 
-Agent collects information from:
-- ✅ **GitHub Releases** (Vue.js, Nuxt.js)
-- ✅ **Official Blogs** (RSS feeds)
-- ✅ **Dev.to** (Vue/Nuxt articles)
+**Current Implementation:**
+- ✅ **GitHub Releases** (Vue.js, Nuxt.js) - Working workflow available
+
+**Planned Integrations:**
+- 🔄 **Official Blogs** (RSS feeds) - planned
+- 🔄 **Dev.to** (Vue/Nuxt articles) - planned
 - 🔄 **Reddit** (r/vuejs, r/nuxt) - planned
 - 🔄 **Twitter/X** - planned
 
@@ -155,10 +157,11 @@ sudo netstat -tlnp | grep :5678
 
 ## 📝 Usage
 
-### Manual workflow execution
+### Workflow Import & Execution
 1. Go to n8n (localhost:5678)
-2. Open workflow "Vue-Nuxt News Collector"
-3. Click "Execute Workflow"
+2. Import workflow: `workflows/github-releases-collector.json`
+3. Configure your GitHub token in the workflow nodes
+4. Click "Execute Workflow" to run manually
 
 ### Schedule
 - Default: Every Sunday at 9:00 AM
@@ -182,11 +185,18 @@ Have an issue? Create an issue in this repository!
 
 ---
 
-**Project Status:** 🚧 In Development
+**Project Status:** 🚧 Phase 1 Complete - GitHub Releases Collector Working
 
-**Upcoming Features:**
-- [ ] Reddit integration
-- [ ] Twitter/X integration  
-- [ ] Email notifications
-- [ ] Web dashboard
-- [ ] Mobile app notifications
+**Current Features:**
+- [x] GitHub Releases Collection (Vue.js & Nuxt.js)
+- [x] Data Processing & Formatting
+- [x] Slack Message Formatting
+- [x] Obsidian Note Formatting
+
+**Next Phase Features:**
+- [ ] Slack Integration Setup
+- [ ] Obsidian Integration Setup
+- [ ] Automated Scheduling
+- [ ] Additional Data Sources (RSS, Dev.to, Reddit)
+- [ ] Email Notifications
+- [ ] Web Dashboard

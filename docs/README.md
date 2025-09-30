@@ -4,10 +4,10 @@ This directory contains detailed documentation for the Vue & Nuxt News Collector
 
 ## Files
 
-- `setup.md` - Detailed setup instructions (will be created)
-- `api-sources.md` - Information about data sources (will be created)
-- `troubleshooting.md` - Common issues and solutions (will be created)
-- `development.md` - Development guidelines (will be created)
+- `workflow-import-guide.md` - Step-by-step workflow import instructions
+- `setup.md` - Detailed setup instructions (to be created)
+- `api-sources.md` - Information about data sources (to be created)
+- `troubleshooting.md` - Common issues and solutions (to be created)
 
 ## Quick Links
 
