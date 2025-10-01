@@ -1,202 +1,150 @@
-# Vue & Nuxt News Collector 🚀
+# Vue/Nuxt Release Monitor 🚀
 
-Automated system for collecting the latest Vue.js and Nuxt.js information using n8n and Claude AI.
+An automated n8n workflow that monitors Vue.js and Nuxt.js releases and posts detailed reports to Slack.
 
-## 🎯 What does this project do?
+## ✨ Features
 
-This agent automatically:
-- 📡 Collects latest Vue.js and Nuxt.js information from various sources
-- 🤖 Processes them using Claude AI into readable format
-- 📱 Sends notifications to Slack
-- 📝 Creates notes in Obsidian
-- ⏰ Runs automatically once per week
-
-## 🏗️ Architecture
-
-```
-📦 vue-nuxt-news/
-├── 🐳 docker/
-│   └── n8n/
-│       └── Dockerfile          # Custom n8n image
-├── 🔄 workflows/               # n8n workflow files
-├── 📚 docs/                    # Documentation
-├── 🐳 docker-compose.yml      # Full stack setup
-├── 🔒 .env.example            # Environment template
-└── 📖 README.md
-```
+- **📦 Release Monitoring**: Automatically tracks latest Vue.js and Nuxt.js releases
+- **📊 Rich Data Collection**: Gathers repository stats, contributors, and changelogs
+- **💬 Slack Integration**: Posts beautifully formatted reports to your Slack channel
+- **🔐 Authenticated GitHub API**: Uses personal access token for higher rate limits (5,000/hour)
+- **🐳 Docker Deployment**: Complete containerized setup with persistent data
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Docker & Docker Compose
-- Git
-- Internet access
-
-### 1. Clone and configure
+### 1. Clone and Setup
 ```bash
-# Clone repository (if you don't have it)
-git clone [your-repo-url]
+git clone <your-repo-url>
 cd vue-nuxt-news
-
-# Copy and configure environment variables
 cp .env.example .env
-nano .env  # Edit as needed
 ```
 
-### 2. Launch
+### 2. Configure Environment
+Edit `.env` file with your credentials:
+- `GITHUB_TOKEN`: Get from https://github.com/settings/tokens (no scopes needed)
+- `SLACK_WEBHOOK_URL`: Create at https://api.slack.com/messaging/webhooks
+- Set secure passwords for database and n8n admin
+
+### 3. Start Services
 ```bash
-# Start the full stack
-docker-compose up -d
-
-# Check status
-docker-compose ps
-
-# Check n8n logs
-docker-compose logs -f n8n
+docker compose up -d
 ```
 
-### 3. Access n8n
-- Open: http://localhost:5678
-- Login: admin (or as set in .env)
-- Password: admin_password (or as set in .env)
+### 4. Import Workflow
+- Access n8n at http://localhost:5678
+- Login with credentials from `.env` file
+- Import `workflows/vue-nuxt-release-monitor.json`
+- Run the workflow manually or set up a schedule
 
-## 🔧 Configuration
+## 📋 Workflow Details
 
-### Environment Variables (.env)
-Copy `.env.example` to `.env` and configure:
+The main workflow (`vue-nuxt-release-monitor.json`) performs:
 
-```bash
-# Basic passwords
-POSTGRES_PASSWORD=your_strong_password
-N8N_BASIC_AUTH_PASSWORD=your_admin_password
-N8N_ENCRYPTION_KEY=very_long_random_string_32+_characters
+1. **Sequential API Calls** to GitHub:
+   - Vue.js latest release
+   - Vue.js repository info
+   - Vue.js top contributors
+   - Nuxt.js latest release
+   - Nuxt.js repository info
+   - Nuxt.js top contributors
 
-# API keys
-CLAUDE_API_KEY=sk-ant-api03-...
-GITHUB_TOKEN=ghp_...
-SLACK_WEBHOOK_URL=https://hooks.slack.com/...
+2. **Data Processing**: Combines all data into structured format
+
+3. **Slack Posting**: Creates formatted message with:
+   - Version numbers and release dates
+   - Repository statistics (stars, forks, issues)
+   - Top contributors
+   - Changelog previews
+   - Direct links to releases
+
+## 🔧 Technical Stack
+
+- **n8n**: Workflow automation platform
+- **PostgreSQL**: Workflow and execution data
+- **Redis**: Caching and session storage
+- **Docker**: Containerization
+- **GitHub API**: Release and repository data
+- **Slack Webhooks**: Message posting
+
+## 📁 Project Structure
+
+```
+├── docker-compose.yml     # Docker services configuration
+├── .env.example          # Environment variables template
+├── workflows/
+│   ├── vue-nuxt-release-monitor.json  # Main working workflow
+│   └── README.md         # Workflow documentation
+└── README.md            # This file
 ```
 
-### How to get API keys:
+## 🔒 Security
 
-**Claude API:**
-1. Go to https://console.anthropic.com
-2. Create account/login
-3. Generate API key
-
-**GitHub Token:**
-1. GitHub → Settings → Developer settings → Personal access tokens
-2. Generate new token (classic)
-3. Select scope: `public_repo`
-
-**Slack Webhook:**
-1. https://api.slack.com/apps
-2. Create New App → From scratch
-3. Incoming Webhooks → Activate
-4. Add New Webhook to Workspace
-
-## 📊 Data Sources
-
-**Current Implementation:**
-- ✅ **GitHub Releases** (Vue.js, Nuxt.js) - Working workflow available
-
-**Planned Integrations:**
-- 🔄 **Official Blogs** (RSS feeds) - planned
-- 🔄 **Dev.to** (Vue/Nuxt articles) - planned
-- 🔄 **Reddit** (r/vuejs, r/nuxt) - planned
-- 🔄 **Twitter/X** - planned
-
-## 🛠️ Development
-
-### Workflow Structure
-```
-1. Schedule Trigger (weekly)
-2. GitHub API → latest releases
-3. RSS Reader → blog posts
-4. Dev.to API → articles
-5. Claude AI → formatting
-6. Slack → notification
-7. Obsidian → note
-```
-
-### Adding New Sources
-1. Add new node in n8n workflow
-2. Configure API/RSS
-3. Connect to Claude for formatting
-4. Test and deploy
-
-## 🐛 Troubleshooting
-
-### n8n won't start
-```bash
-# Check logs
-docker-compose logs n8n
-
-# Restart services
-docker-compose restart
-
-# Full restart
-docker-compose down
-docker-compose up -d
-```
-
-### Database issues
-```bash
-# Reset database (WARNING: deletes data!)
-docker-compose down -v
-docker-compose up -d
-```
-
-### Port conflicts
-```bash
-# Check occupied ports
-sudo netstat -tlnp | grep :5678
-
-# Change port in docker-compose.yml if needed
-```
-
-## 📝 Usage
-
-### Workflow Import & Execution
-1. Go to n8n (localhost:5678)
-2. Import workflow: `workflows/github-releases-collector.json`
-3. Configure your GitHub token in the workflow nodes
-4. Click "Execute Workflow" to run manually
-
-### Schedule
-- Default: Every Sunday at 9:00 AM
-- Configuration: In n8n Schedule Trigger node
+- Sensitive credentials are stored in `.env` (not committed)
+- GitHub token uses minimal permissions
+- All services run in isolated Docker network
+- n8n protected with basic authentication
 
 ## 🤝 Contributing
 
-1. Fork repo
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Create Pull Request
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test the workflow
+5. Submit a pull request
 
 ## 📄 License
 
-MIT License - see LICENSE file
-
-## 🆘 Support
-
-Have an issue? Create an issue in this repository!
+MIT License - feel free to use and modify as needed.
 
 ---
 
-**Project Status:** 🚧 Phase 1 Complete - GitHub Releases Collector Working
+## 🛠️ Development Notes
 
-**Current Features:**
-- [x] GitHub Releases Collection (Vue.js & Nuxt.js)
-- [x] Data Processing & Formatting
-- [x] Slack Message Formatting
-- [x] Obsidian Note Formatting
+### Example Slack Output
+```
+🚀 Vue.js & Nuxt.js Report - October 1, 2025 at 04:22 PM
 
-**Next Phase Features:**
-- [ ] Slack Integration Setup
-- [ ] Obsidian Integration Setup
-- [ ] Automated Scheduling
-- [ ] Additional Data Sources (RSS, Dev.to, Reddit)
-- [ ] Email Notifications
-- [ ] Web Dashboard
+💚 Vue.js
+├─ 📦 Version: v3.5.22
+├─ 📅 Released: September 25, 2025 at 01:08 AM (6 days ago)
+├─ 👤 Author: github-actions[bot]
+├─ ⭐ Stars: 51,741
+├─ 🍴 Forks: 8,894
+├─ 👀 Watchers: 51,741
+├─ 🐛 Issues: 1065
+├─ 📝 Language: TypeScript
+├─ 📄 License: MIT License
+├─ 👨‍💻 Top contributors:
+│  ├─ yyx990803 (1651)
+│  ├─ HcySunYang (589)
+│  └─ posva (393)
+└─ 🔗 https://github.com/vuejs/core/releases/tag/v3.5.22
+
+🟢 Nuxt.js
+├─ 📦 Version: v4.1.2
+├─ 📅 Released: September 12, 2025 at 11:48 PM (18 days ago)
+├─ 👤 Author: github-actions[bot]
+├─ ⭐ Stars: 58,319
+├─ 🍴 Forks: 5,373
+├─ 👀 Watchers: 58,319
+├─ 🐛 Issues: 894
+├─ 📝 Language: TypeScript
+├─ 📄 License: MIT License
+├─ 👨‍💻 Top contributors:
+│  ├─ pi0 (1240)
+│  ├─ danielroe (983)
+│  └─ atinux (567)
+└─ 🔗 https://github.com/nuxt/nuxt/releases/tag/v4.1.2
+
+✅ Report complete | 🤖 Authenticated GitHub API
+```
+
+### Key Features Implemented
+- [x] GitHub API Integration with Authentication
+- [x] Sequential Data Processing (avoiding merge node issues)
+- [x] Comprehensive Repository Statistics
+- [x] Top Contributors Information
+- [x] Properly Formatted Slack Messages
+- [x] Error Handling and Rate Limit Management
+- [x] Docker Containerization
+- [x] Security Best Practices

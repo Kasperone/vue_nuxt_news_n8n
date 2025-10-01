@@ -1,0 +1,222 @@
+{
+  "name": "Vue/Nuxt Release Monitor",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/vuejs/core/releases?per_page=1",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Collector"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "vue-release",
+      "name": "1. Vue Release",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/vuejs/core",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Collector"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "vue-repo",
+      "name": "2. Vue Repo Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/vuejs/core/contributors?per_page=5",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Collector"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "vue-contributors",
+      "name": "3. Vue Contributors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/nuxt/nuxt/releases?per_page=1",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Collector"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "nuxt-release",
+      "name": "4. Nuxt Release",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/nuxt/nuxt",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Collector"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "nuxt-repo",
+      "name": "5. Nuxt Repo Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/nuxt/nuxt/contributors?per_page=5",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Collector"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "nuxt-contributors",
+      "name": "6. Nuxt Contributors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// SEQUENTIAL APPROACH: Process all data in sequence\nconst currentInput = $input.first().json;\n\nconsole.log('=== SEQUENTIAL DATA PROCESSING ===');\n\n// Access data from previous node executions\nconst vueRelease = $('1. Vue Release').first()?.json;\nconst vueRepo = $('2. Vue Repo Info').first()?.json;\nconst vueContributors = $('3. Vue Contributors').first()?.json;\nconst nuxtRelease = $('4. Nuxt Release').first()?.json;\nconst nuxtRepo = $('5. Nuxt Repo Info').first()?.json;\nconst nuxtContributors = $('6. Nuxt Contributors').first()?.json;\n\n// Helper functions\nfunction extractRelease(data) {\n  if (Array.isArray(data) && data.length > 0 && data[0].tag_name) {\n    return data[0];\n  } else if (data && data.tag_name) {\n    return data;\n  }\n  return null;\n}\n\nfunction safeGet(obj, path, fallback) {\n  try {\n    return path.split('.').reduce((o, p) => o && o[p], obj) || fallback;\n  } catch {\n    return fallback;\n  }\n}\n\n// Process Vue.js data\nconst vueReleaseData = extractRelease(vueRelease);\nconst vueData = vueReleaseData ? {\n  framework: 'Vue.js',\n  repository: 'vuejs/core',\n  latest_version: safeGet(vueReleaseData, 'tag_name', 'Unknown'),\n  release_name: safeGet(vueReleaseData, 'name', 'No name'),\n  release_date_formatted: vueReleaseData.published_at ? new Date(vueReleaseData.published_at).toLocaleDateString('en-US', {\n    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'\n  }) : 'Unknown',\n  days_since_release: vueReleaseData.published_at ? Math.floor((new Date() - new Date(vueReleaseData.published_at)) / (1000 * 60 * 60 * 24)) : 0,\n  is_prerelease: safeGet(vueReleaseData, 'prerelease', false),\n  release_author: safeGet(vueReleaseData, 'author.login', 'Unknown'),\n  changelog: safeGet(vueReleaseData, 'body', 'No changelog available'),\n  changelog_length: (safeGet(vueReleaseData, 'body', '') || '').length,\n  repo_stars: safeGet(vueRepo, 'stargazers_count', 0),\n  repo_forks: safeGet(vueRepo, 'forks_count', 0),\n  repo_watchers: safeGet(vueRepo, 'watchers_count', 0),\n  repo_open_issues: safeGet(vueRepo, 'open_issues_count', 0),\n  repo_language: safeGet(vueRepo, 'language', 'Unknown'),\n  repo_license: safeGet(vueRepo, 'license.name', 'Unknown'),\n  release_url: safeGet(vueReleaseData, 'html_url', ''),\n  top_contributors: (vueContributors && Array.isArray(vueContributors) ? vueContributors : []).slice(0, 5).map(c => ({\n    login: safeGet(c, 'login', 'Unknown'),\n    contributions: safeGet(c, 'contributions', 0),\n    profile_url: safeGet(c, 'html_url', '')\n  })),\n  total_contributors_shown: (vueContributors && Array.isArray(vueContributors) ? vueContributors : []).length\n} : null;\n\n// Process Nuxt.js data\nconst nuxtReleaseData = extractRelease(nuxtRelease);\nconst nuxtData = nuxtReleaseData ? {\n  framework: 'Nuxt.js',\n  repository: 'nuxt/nuxt',\n  latest_version: safeGet(nuxtReleaseData, 'tag_name', 'Unknown'),\n  release_name: safeGet(nuxtReleaseData, 'name', 'No name'),\n  release_date_formatted: nuxtReleaseData.published_at ? new Date(nuxtReleaseData.published_at).toLocaleDateString('en-US', {\n    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'\n  }) : 'Unknown',\n  days_since_release: nuxtReleaseData.published_at ? Math.floor((new Date() - new Date(nuxtReleaseData.published_at)) / (1000 * 60 * 60 * 24)) : 0,\n  is_prerelease: safeGet(nuxtReleaseData, 'prerelease', false),\n  release_author: safeGet(nuxtReleaseData, 'author.login', 'Unknown'),\n  changelog: safeGet(nuxtReleaseData, 'body', 'No changelog available'),\n  changelog_length: (safeGet(nuxtReleaseData, 'body', '') || '').length,\n  repo_stars: safeGet(nuxtRepo, 'stargazers_count', 0),\n  repo_forks: safeGet(nuxtRepo, 'forks_count', 0),\n  repo_watchers: safeGet(nuxtRepo, 'watchers_count', 0),\n  repo_open_issues: safeGet(nuxtRepo, 'open_issues_count', 0),\n  repo_language: safeGet(nuxtRepo, 'language', 'Unknown'),\n  repo_license: safeGet(nuxtRepo, 'license.name', 'Unknown'),\n  release_url: safeGet(nuxtReleaseData, 'html_url', ''),\n  top_contributors: (nuxtContributors && Array.isArray(nuxtContributors) ? nuxtContributors : []).slice(0, 5).map(c => ({\n    login: safeGet(c, 'login', 'Unknown'),\n    contributions: safeGet(c, 'contributions', 0),\n    profile_url: safeGet(c, 'html_url', '')\n  })),\n  total_contributors_shown: (nuxtContributors && Array.isArray(nuxtContributors) ? nuxtContributors : []).length\n} : null;\n\nif (!vueData && !nuxtData) {\n  return [{ json: { error: 'No valid data found for Vue.js or Nuxt.js' } }];\n}\n\nreturn [\n  ...(vueData ? [{ json: vueData }] : []),\n  ...(nuxtData ? [{ json: nuxtData }] : [])\n];"
+      },
+      "id": "process-all-data",
+      "name": "Process All Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create properly formatted Slack message\nconst frameworks = $input.all();\nconst currentDate = new Date().toLocaleDateString('en-US');\nconst currentTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });\n\nif (frameworks.length === 1 && frameworks[0].json.error) {\n  return [{ json: { \n    success: false, \n    slack_message: `❌ **Vue.js & Nuxt.js Report - Error** - ${currentDate} at ${currentTime}\\n\\n**Error:** ${frameworks[0].json.error}\\n\\n🔧 Please check your configuration.`,\n    collection_timestamp: new Date().toISOString()\n  }}];\n}\n\nlet message = `🚀 **Vue.js & Nuxt.js Report** - ${currentDate} at ${currentTime}\\n\\n`;\n\nframeworks.forEach(fw => {\n  const data = fw.json;\n  const emoji = data.framework === 'Vue.js' ? '💚' : '🟢';\n  \n  message += `${emoji} **${data.framework}**\\n`;\n  message += `├─ 📦 **Version:** ${data.latest_version}\\n`;\n  message += `├─ 📅 **Released:** ${data.release_date_formatted} (${data.days_since_release} days ago)\\n`;\n  message += `├─ 👤 **Author:** ${data.release_author}\\n`;\n  message += `├─ ⭐ **Stars:** ${data.repo_stars?.toLocaleString('en-US')}\\n`;\n  message += `├─ 🍴 **Forks:** ${data.repo_forks?.toLocaleString('en-US')}\\n`;\n  message += `├─ 👀 **Watchers:** ${data.repo_watchers?.toLocaleString('en-US')}\\n`;\n  message += `├─ 🐛 **Issues:** ${data.repo_open_issues}\\n`;\n  message += `├─ 📝 **Language:** ${data.repo_language}\\n`;\n  message += `├─ 📄 **License:** ${data.repo_license}\\n`;\n  \n  if (data.top_contributors?.length > 0) {\n    message += `├─ 👨‍💻 **Top contributors:**\\n`;\n    data.top_contributors.slice(0, 3).forEach((contributor, index) => {\n      const prefix = index === Math.min(data.top_contributors.length - 1, 2) ? '│  └─' : '│  ├─';\n      message += `${prefix} ${contributor.login} (${contributor.contributions})\\n`;\n    });\n  }\n  \n  if (data.changelog && data.changelog_length > 50 && data.changelog !== 'No changelog available') {\n    const preview = data.changelog.substring(0, 150).replace(/\\n/g, ' ').replace(/\\s+/g, ' ').trim() + '...';\n    message += `├─ 📋 **Changes:** ${preview}\\n`;\n  }\n  \n  message += `└─ 🔗 ${data.release_url}\\n\\n`;\n});\n\nmessage += `✅ **Report complete** | 🤖 *Authenticated GitHub API*`;\n\nreturn [{ json: { \n  success: true,\n  frameworks_analyzed: frameworks.length,\n  slack_message: message,\n  collection_timestamp: new Date().toISOString()\n}}];"
+      },
+      "id": "create-summary",
+      "name": "Create Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.slack_message }}"
+            }
+          ]
+        },
+        "continueOnFail": true
+      },
+      "id": "send-to-slack",
+      "name": "Send to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2220, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[ {"node": "1. Vue Release", "type": "main", "index": 0} ]]
+    },
+    "1. Vue Release": {
+      "main": [[ {"node": "2. Vue Repo Info", "type": "main", "index": 0} ]]
+    },
+    "2. Vue Repo Info": {
+      "main": [[ {"node": "3. Vue Contributors", "type": "main", "index": 0} ]]
+    },
+    "3. Vue Contributors": {
+      "main": [[ {"node": "4. Nuxt Release", "type": "main", "index": 0} ]]
+    },
+    "4. Nuxt Release": {
+      "main": [[ {"node": "5. Nuxt Repo Info", "type": "main", "index": 0} ]]
+    },
+    "5. Nuxt Repo Info": {
+      "main": [[ {"node": "6. Nuxt Contributors", "type": "main", "index": 0} ]]
+    },
+    "6. Nuxt Contributors": {
+      "main": [[ {"node": "Process All Data", "type": "main", "index": 0} ]]
+    },
+    "Process All Data": {
+      "main": [[ {"node": "Create Summary", "type": "main", "index": 0} ]]
+    },
+    "Create Summary": {
+      "main": [[ {"node": "Send to Slack", "type": "main", "index": 0} ]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "github-sequential-simple-auth"
+}
