@@ -1,0 +1,309 @@
+{
+  "name": "Vue/Nuxt News Aggregator (Enhanced Fixed)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://weekly-vue.news/rss.xml",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "string"
+            }
+          },
+          "headers": {
+            "parameters": [
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Aggregator-v1.0"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "fetch-rss",
+      "name": "Fetch RSS Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/vuejs/core/releases/latest",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Aggregator/1.0"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "vue-release",
+      "name": "Vue.js Release",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/vuejs/core",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Aggregator/1.0"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "vue-repo-info",
+      "name": "Vue.js Repo Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/vuejs/core/contributors?per_page=5",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Aggregator/1.0"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "vue-contributors",
+      "name": "Vue.js Contributors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [920, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/nuxt/nuxt/releases/latest",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Aggregator/1.0"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "nuxt-release",
+      "name": "Nuxt.js Release",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1140, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/nuxt/nuxt",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Aggregator/1.0"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "nuxt-repo-info",
+      "name": "Nuxt.js Repo Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1360, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/nuxt/nuxt/contributors?per_page=5",
+        "options": {
+          "headers": {
+            "parameters": [
+              {"name": "Accept", "value": "application/vnd.github.v3+json"},
+              {"name": "User-Agent", "value": "Vue-Nuxt-News-Aggregator/1.0"},
+              {"name": "Authorization", "value": "={{ 'Bearer ' + $env.GITHUB_TOKEN }}"}
+            ]
+          }
+        },
+        "continueOnFail": true
+      },
+      "id": "nuxt-contributors",
+      "name": "Nuxt.js Contributors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1580, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse RSS feed and extract latest article information\nconst input = $input.first();\n\nlet rssXml = '';\n\n// Extract RSS XML from various possible input formats\nif (typeof input === 'string') {\n  rssXml = input;\n} else if (input?.data && typeof input.data === 'string') {\n  rssXml = input.data;\n} else if (input?.json && typeof input.json === 'string') {\n  rssXml = input.json;\n} else {\n  console.error('No valid RSS data found in input');\n  return [{ json: { error: 'No RSS data found', input_type: typeof input } }];\n}\n\nconsole.log(`RSS XML received: ${rssXml.length} characters`);\n\n// Extract RSS items using regex\nconst itemMatches = rssXml.match(/<item[^>]*>([\\s\\S]*?)<\\/item>/g);\n\nif (!itemMatches?.length) {\n  console.error('No RSS items found in XML');\n  return [{ json: { error: 'No RSS items found in feed' } }];\n}\n\nconsole.log(`Found ${itemMatches.length} RSS items`);\n\n// Parse the latest item (first in list)\nconst latestItem = itemMatches[0];\n\n// Extract data using robust regex patterns\nconst titleMatch = latestItem.match(/<title><!\\[CDATA\\[([^\\]]+)\\]\\]><\\/title>/) || \n                  latestItem.match(/<title>([^<]+)<\\/title>/);\nconst linkMatch = latestItem.match(/<link>([^<]+)<\\/link>/);\nconst pubDateMatch = latestItem.match(/<pubDate>([^<]+)<\\/pubDate>/);\nconst descriptionMatch = latestItem.match(/<description><!\\[CDATA\\[([^\\]]+)\\]\\]><\\/description>/) || \n                        latestItem.match(/<description>([^<]+)<\\/description>/);\n\nconst title = titleMatch?.[1] || 'No title available';\nconst link = linkMatch?.[1] || '';\nconst pubDate = pubDateMatch?.[1] || '';\nconst description = descriptionMatch?.[1] || '';\n\n// Parse and format publication date\nconst publishedDate = pubDate ? new Date(pubDate) : new Date();\nconst daysAgo = Math.floor((Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24));\nconst formattedDate = publishedDate.toLocaleDateString('en-US', {\n  year: 'numeric', \n  month: 'long', \n  day: 'numeric',\n  hour: '2-digit',\n  minute: '2-digit'\n});\n\n// Extract issue number\nconst issueMatch = title.match(/#(\\d+)/);\nconst issueNumber = issueMatch?.[1] || 'Unknown';\n\n// Create a smart summary based on title analysis\nlet smartSummary = `Weekly Vue News #${issueNumber}: `;\nconst titleLower = title.toLowerCase();\n\nif (titleLower.includes('vue') && titleLower.includes('nuxt')) {\n  smartSummary += 'Covers both Vue.js and Nuxt.js ecosystem updates. ';\n} else if (titleLower.includes('nuxt')) {\n  smartSummary += 'Focuses on Nuxt.js framework developments. ';\n} else if (titleLower.includes('vue')) {\n  smartSummary += 'Highlights Vue.js framework updates. ';\n}\n\n// Extract key topics from title\nconst topics = [];\nif (titleLower.includes('ui')) topics.push('UI components');\nif (titleLower.match(/v\\d+/)) topics.push('version updates');\nif (titleLower.includes('real-time')) topics.push('real-time features');\nif (titleLower.includes('component')) topics.push('component development');\nif (titleLower.includes('communication')) topics.push('communication patterns');\nif (titleLower.includes('performance')) topics.push('performance optimization');\nif (titleLower.includes('typescript')) topics.push('TypeScript integration');\n\nif (topics.length > 0) {\n  smartSummary += `Key topics include: ${topics.join(', ')}.`;\n} else {\n  smartSummary += 'Covers latest framework updates, tools, and community resources.';\n}\n\n// Return structured data\nconst result = {\n  type: 'weekly_vue_news',\n  title,\n  issue_number: issueNumber,\n  link,\n  publication_date: pubDate,\n  publication_date_formatted: formattedDate,\n  days_since_published: daysAgo,\n  description,\n  source: 'Weekly Vue News',\n  author: 'Michael Hoffmann',\n  smart_summary: smartSummary,\n  has_ai_summary: false,\n  is_latest: true\n};\n\nconsole.log(`Parsed RSS item: ${title}`);\nreturn [{ json: result }];"
+      },
+      "id": "parse-rss",
+      "name": "Parse RSS Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process all GitHub data (releases, repo info, contributors)\nconst vueRelease = $('Vue.js Release').first()?.json;\nconst vueRepoInfo = $('Vue.js Repo Info').first()?.json;\nconst vueContributors = $('Vue.js Contributors').all().map(item => item.json).filter(Boolean);\nconst nuxtRelease = $('Nuxt.js Release').first()?.json;\nconst nuxtRepoInfo = $('Nuxt.js Repo Info').first()?.json;\nconst nuxtContributors = $('Nuxt.js Contributors').all().map(item => item.json).filter(Boolean);\n\nconsole.log('=== PROCESSING ENHANCED GITHUB DATA ===');\nconsole.log('Vue release:', vueRelease ? 'Available' : 'Missing');\nconsole.log('Vue repo info:', vueRepoInfo ? 'Available' : 'Missing');\nconsole.log('Vue contributors:', vueContributors.length, 'items');\nconsole.log('Nuxt release:', nuxtRelease ? 'Available' : 'Missing');\nconsole.log('Nuxt repo info:', nuxtRepoInfo ? 'Available' : 'Missing');\nconsole.log('Nuxt contributors:', nuxtContributors.length, 'items');\n\n// Helper function for safe data extraction\nfunction safeExtract(data, path, fallback = 'Unknown') {\n  try {\n    return path.split('.').reduce((obj, key) => obj?.[key], data) ?? fallback;\n  } catch {\n    return fallback;\n  }\n}\n\n// Format date helper\nfunction formatReleaseDate(dateStr) {\n  if (!dateStr) return 'Unknown';\n  const date = new Date(dateStr);\n  const daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));\n  const formatted = date.toLocaleDateString('en-US', {\n    year: 'numeric',\n    month: 'long',\n    day: 'numeric'\n  });\n  return `${formatted} (${daysAgo} days ago)`;\n}\n\n// Format numbers with thousands separator\nfunction formatNumber(num) {\n  return num ? num.toLocaleString() : '0';\n}\n\nconst frameworks = [];\n\n// Process Vue.js data\nif (vueRelease && !vueRelease.error && vueRelease.tag_name) {\n  const topContributors = vueContributors.slice(0, 3).map(contributor => \n    `${safeExtract(contributor, 'login')} (${formatNumber(safeExtract(contributor, 'contributions', 0))})`\n  ).join(', ');\n\n  const vueFramework = {\n    name: 'Vue.js',\n    emoji: '💚',\n    // Release data\n    version: safeExtract(vueRelease, 'tag_name'),\n    release_name: safeExtract(vueRelease, 'name'),\n    release_date_formatted: formatReleaseDate(vueRelease.published_at),\n    is_prerelease: vueRelease.prerelease || false,\n    release_author: safeExtract(vueRelease, 'author.login'),\n    release_url: safeExtract(vueRelease, 'html_url', ''),\n    changelog_preview: safeExtract(vueRelease, 'body', '').substring(0, 200).replace(/\\n/g, ' ').trim() + (vueRelease.body && vueRelease.body.length > 200 ? '...' : ''),\n    // Repository data\n    stars: formatNumber(safeExtract(vueRepoInfo, 'stargazers_count', 0)),\n    forks: formatNumber(safeExtract(vueRepoInfo, 'forks_count', 0)),\n    open_issues: formatNumber(safeExtract(vueRepoInfo, 'open_issues_count', 0)),\n    language: safeExtract(vueRepoInfo, 'language', 'Unknown'),\n    repo_updated: formatReleaseDate(safeExtract(vueRepoInfo, 'pushed_at')),\n    // Contributors\n    top_contributors: topContributors || 'No contributors data',\n    total_contributors: vueContributors.length\n  };\n  frameworks.push(vueFramework);\n  console.log(`Processed Vue.js: ${vueFramework.version}`);\n}\n\n// Process Nuxt.js data\nif (nuxtRelease && !nuxtRelease.error && nuxtRelease.tag_name) {\n  const topContributors = nuxtContributors.slice(0, 3).map(contributor => \n    `${safeExtract(contributor, 'login')} (${formatNumber(safeExtract(contributor, 'contributions', 0))})`\n  ).join(', ');\n\n  const nuxtFramework = {\n    name: 'Nuxt.js',\n    emoji: '🟢',\n    // Release data\n    version: safeExtract(nuxtRelease, 'tag_name'),\n    release_name: safeExtract(nuxtRelease, 'name'),\n    release_date_formatted: formatReleaseDate(nuxtRelease.published_at),\n    is_prerelease: nuxtRelease.prerelease || false,\n    release_author: safeExtract(nuxtRelease, 'author.login'),\n    release_url: safeExtract(nuxtRelease, 'html_url', ''),\n    changelog_preview: safeExtract(nuxtRelease, 'body', '').substring(0, 200).replace(/\\n/g, ' ').trim() + (nuxtRelease.body && nuxtRelease.body.length > 200 ? '...' : ''),\n    // Repository data\n    stars: formatNumber(safeExtract(nuxtRepoInfo, 'stargazers_count', 0)),\n    forks: formatNumber(safeExtract(nuxtRepoInfo, 'forks_count', 0)),\n    open_issues: formatNumber(safeExtract(nuxtRepoInfo, 'open_issues_count', 0)),\n    language: safeExtract(nuxtRepoInfo, 'language', 'Unknown'),\n    repo_updated: formatReleaseDate(safeExtract(nuxtRepoInfo, 'pushed_at')),\n    // Contributors\n    top_contributors: topContributors || 'No contributors data',\n    total_contributors: nuxtContributors.length\n  };\n  frameworks.push(nuxtFramework);\n  console.log(`Processed Nuxt.js: ${nuxtFramework.version}`);\n}\n\nif (frameworks.length === 0) {\n  return [{ json: { error: 'No valid GitHub framework data available' } }];\n}\n\nconsole.log(`Successfully processed ${frameworks.length} frameworks with enhanced data`);\nreturn [{ json: { frameworks, total_count: frameworks.length } }];"
+      },
+      "id": "process-enhanced-github",
+      "name": "Process Enhanced GitHub Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1800, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create RSS Newsletter Slack Message\nconst rssData = $input.first()?.json;\nconst timestamp = new Date().toLocaleDateString('en-US', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric',\n  hour: '2-digit',\n  minute: '2-digit'\n});\n\nif (!rssData || rssData.error) {\n  return [{\n    json: {\n      success: false,\n      slack_message: `❌ *Weekly Vue News - Error*\\n\\n🕐 ${timestamp}\\n\\n*Error:* ${rssData?.error || 'Unknown error'}\\n\\n🔧 Please check RSS feed configuration.`,\n      collection_timestamp: new Date().toISOString()\n    }\n  }];\n}\n\nlet message = `📰 *Weekly Vue News Update*\\n\\n🕐 ${timestamp}\\n\\n`;\n\nmessage += `📝 *${rssData.title}*\\n`;\nmessage += `├ 📅 Published: ${rssData.publication_date_formatted}\\n`;\nmessage += `├ ✍️ Author: ${rssData.author}\\n`;\nmessage += `├ 🔢 Issue: #${rssData.issue_number}\\n`;\n\nif (rssData.smart_summary) {\n  message += `├ 💡 *Summary:* ${rssData.smart_summary}\\n`;\n}\n\nmessage += `└ 🔗 [Read Full Newsletter](${rssData.link})\\n\\n`;\n\n// Footer\nmessage += `---\\n`;\nmessage += `✅ *Newsletter Retrieved* | 📊 Source: Weekly Vue News | 💡 Smart Analysis`;\n\nreturn [{\n  json: {\n    success: true,\n    message_type: 'newsletter',\n    slack_message: message,\n    collection_timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "create-rss-message",
+      "name": "Create RSS Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create Enhanced GitHub Releases Slack Message\nconst githubData = $input.first()?.json;\nconst timestamp = new Date().toLocaleDateString('en-US', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric',\n  hour: '2-digit',\n  minute: '2-digit'\n});\n\nif (!githubData || githubData.error || !githubData.frameworks) {\n  return [{\n    json: {\n      success: false,\n      slack_message: `❌ *GitHub Releases - Error*\\n\\n🕐 ${timestamp}\\n\\n*Error:* ${githubData?.error || 'No GitHub data available'}\\n\\n🔧 Please check GitHub API configuration.`,\n      collection_timestamp: new Date().toISOString()\n    }\n  }];\n}\n\nconst frameworks = githubData.frameworks;\nlet message = `📦 *GitHub Framework Releases & Stats*\\n\\n🕐 ${timestamp}\\n\\n`;\n\nframeworks.forEach(framework => {\n  const statusEmoji = framework.is_prerelease ? '🧪' : '✅';\n  \n  message += `${framework.emoji} *${framework.name} ${framework.version}* ${statusEmoji}\\n`;\n  \n  // Release information\n  message += `*📋 Release Info:*\\n`;\n  message += `├ 📅 Released: ${framework.release_date_formatted}\\n`;\n  message += `├ 👤 Author: ${framework.release_author}\\n`;\n  message += `├ 🏷️ Status: ${framework.is_prerelease ? 'Pre-release' : 'Stable Release'}\\n`;\n  \n  if (framework.changelog_preview && framework.changelog_preview.length > 10) {\n    message += `├ 📝 Preview: ${framework.changelog_preview}\\n`;\n  }\n  \n  message += `└ 🔗 [View Release](${framework.release_url})\\n\\n`;\n  \n  // Repository statistics\n  message += `*📊 Repository Stats:*\\n`;\n  message += `├ ⭐ Stars: ${framework.stars}\\n`;\n  message += `├ 🍴 Forks: ${framework.forks}\\n`;\n  message += `├ 🐛 Open Issues: ${framework.open_issues}\\n`;\n  message += `├ 💻 Language: ${framework.language}\\n`;\n  message += `└ 🔄 Last Update: ${framework.repo_updated}\\n\\n`;\n  \n  // Top contributors\n  message += `*👥 Top Contributors:*\\n`;\n  if (framework.top_contributors && framework.top_contributors !== 'No contributors data') {\n    message += `├ 🏆 ${framework.top_contributors}\\n`;\n    message += `└ 👨‍💻 Total Contributors: ${framework.total_contributors}\\n\\n`;\n  } else {\n    message += `└ ❌ Contributors data unavailable\\n\\n`;\n  }\n  \n  message += `---\\n\\n`;\n});\n\n// Footer\nmessage += `✅ *Enhanced Data Retrieved* | 📊 Frameworks: ${frameworks.length} | 🔐 GitHub API | 📈 Full Stats`;\n\nreturn [{\n  json: {\n    success: true,\n    message_type: 'enhanced_releases',\n    total_frameworks: frameworks.length,\n    slack_message: message,\n    collection_timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "create-enhanced-github-message",
+      "name": "Create Enhanced GitHub Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2020, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.slack_message }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "send-rss-slack",
+      "name": "Send RSS to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1140, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.slack_message }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "send-enhanced-github-slack",
+      "name": "Send Enhanced GitHub to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2240, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {"node": "Fetch RSS Feed", "type": "main", "index": 0},
+          {"node": "Vue.js Release", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Fetch RSS Feed": {
+      "main": [[ {"node": "Parse RSS Data", "type": "main", "index": 0} ]]
+    },
+    "Vue.js Release": {
+      "main": [[ {"node": "Vue.js Repo Info", "type": "main", "index": 0} ]]
+    },
+    "Vue.js Repo Info": {
+      "main": [[ {"node": "Vue.js Contributors", "type": "main", "index": 0} ]]
+    },
+    "Vue.js Contributors": {
+      "main": [[ {"node": "Nuxt.js Release", "type": "main", "index": 0} ]]
+    },
+    "Nuxt.js Release": {
+      "main": [[ {"node": "Nuxt.js Repo Info", "type": "main", "index": 0} ]]
+    },
+    "Nuxt.js Repo Info": {
+      "main": [[ {"node": "Nuxt.js Contributors", "type": "main", "index": 0} ]]
+    },
+    "Nuxt.js Contributors": {
+      "main": [[ {"node": "Process Enhanced GitHub Data", "type": "main", "index": 0} ]]
+    },
+    "Parse RSS Data": {
+      "main": [[ {"node": "Create RSS Message", "type": "main", "index": 0} ]]
+    },
+    "Process Enhanced GitHub Data": {
+      "main": [[ {"node": "Create Enhanced GitHub Message", "type": "main", "index": 0} ]]
+    },
+    "Create RSS Message": {
+      "main": [[ {"node": "Send RSS to Slack", "type": "main", "index": 0} ]]
+    },
+    "Create Enhanced GitHub Message": {
+      "main": [[ {"node": "Send Enhanced GitHub to Slack", "type": "main", "index": 0} ]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null
+}
