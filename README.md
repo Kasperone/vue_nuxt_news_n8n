@@ -1,13 +1,15 @@
-# Vue/Nuxt Release Monitor 🚀
+# Vue/Nuxt News Aggregator 🚀
 
-An automated n8n workflow that monitors Vue.js and Nuxt.js releases and posts detailed reports to Slack.
+An automated n8n workflow that monitors Vue.js and Nuxt.js releases, Weekly Vue News articles, and posts comprehensive reports to Slack.
 
 ## ✨ Features
 
-- **📦 Release Monitoring**: Automatically tracks latest Vue.js and Nuxt.js releases
+- **📦 Latest Release Fetching**: Retrieves current Vue.js and Nuxt.js release information
+- **📰 News Aggregation**: Monitors Weekly Vue News RSS feed for latest community articles
 - **📊 Rich Data Collection**: Gathers repository stats, contributors, and changelogs
 - **💬 Slack Integration**: Posts beautifully formatted reports to your Slack channel
 - **🔐 Authenticated GitHub API**: Uses personal access token for higher rate limits (5,000/hour)
+- **🌐 RSS Feed Processing**: Parses and formats Weekly Vue News content
 - **🐳 Docker Deployment**: Complete containerized setup with persistent data
 
 ## 🚀 Quick Start
@@ -33,13 +35,19 @@ docker compose up -d
 ### 4. Import Workflow
 - Access n8n at http://localhost:5678
 - Login with credentials from `.env` file
-- Import `workflows/vue-nuxt-release-monitor.json`
+- Import `workflows/vue-nuxt-news-aggregator.json`
 - Run the workflow manually or set up a schedule
 
 ## 📋 Workflow Details
 
-The main workflow (`vue-nuxt-release-monitor.json`) performs:
+The main workflow (`vue-nuxt-news-aggregator.json`) performs two parallel processes:
 
+### 📰 Weekly Vue News Processing:
+1. **RSS Feed Fetch**: Retrieves latest articles from https://weekly-vue.news/rss.xml
+2. **XML Parsing**: Extracts title, publication date, link, and content
+3. **Slack Posting**: Posts formatted Weekly Vue News update
+
+### 📦 GitHub Release Monitoring:
 1. **Sequential API Calls** to GitHub:
    - Vue.js latest release
    - Vue.js repository info
@@ -57,6 +65,17 @@ The main workflow (`vue-nuxt-release-monitor.json`) performs:
    - Changelog previews
    - Direct links to releases
 
+## 📰 About Weekly Vue News
+
+[Weekly Vue News](https://weekly-vue.news/) is an independent newsletter curated by Michael Hoffmann that delivers the latest Vue and Nuxt tips, tutorials, and updates. The workflow integrates with their RSS feed to automatically fetch and share:
+
+- **Latest Newsletter Issues**: Automatically detects new weekly publications
+- **Rich Content**: Extracts titles, publication dates, and content previews
+- **Community Focus**: Covers tools, tutorials, and insights from the Vue & Nuxt ecosystem
+- **Independent Coverage**: 100% independent newsletter with no official Vue/Nuxt affiliation
+
+The RSS integration ensures your team stays updated with community news and best practices alongside official release information.
+
 ## 🔧 Technical Stack
 
 - **n8n**: Workflow automation platform
@@ -64,6 +83,7 @@ The main workflow (`vue-nuxt-release-monitor.json`) performs:
 - **Redis**: Caching and session storage
 - **Docker**: Containerization
 - **GitHub API**: Release and repository data
+- **RSS/XML**: Weekly Vue News feed parsing
 - **Slack Webhooks**: Message posting
 
 ## 📁 Project Structure
@@ -72,14 +92,14 @@ The main workflow (`vue-nuxt-release-monitor.json`) performs:
 ├── docker-compose.yml     # Docker services configuration
 ├── .env.example          # Environment variables template
 ├── workflows/
-│   ├── vue-nuxt-release-monitor.json  # Main working workflow
+│   ├── vue-nuxt-news-aggregator.json  # Main working workflow
 │   └── README.md         # Workflow documentation
 └── README.md            # This file
 ```
 
 ## 🔒 Security
 
-- Sensitive credentials are stored in `.env` (not committed)
+- Sensitive credentials are stored in `.env`
 - GitHub token uses minimal permissions
 - All services run in isolated Docker network
 - n8n protected with basic authentication
@@ -100,7 +120,22 @@ MIT License - feel free to use and modify as needed.
 
 ## 🛠️ Development Notes
 
-### Example Slack Output
+### Example Slack Outputs
+
+#### Weekly Vue News Message
+```
+📰 Weekly Vue News - Issue #234
+📅 Published: October 1, 2025 at 02:15 PM
+🔗 https://weekly-vue.news/issues/234
+
+📄 Content Preview:
+This week's highlights include new Vue 3.5 features, Nuxt 4 updates, 
+community tools, and best practices for modern Vue development...
+
+✅ Weekly Vue News update complete
+```
+
+#### GitHub Releases Report
 ```
 🚀 Vue.js & Nuxt.js Report - October 1, 2025 at 04:22 PM
 
@@ -138,13 +173,3 @@ MIT License - feel free to use and modify as needed.
 
 ✅ Report complete | 🤖 Authenticated GitHub API
 ```
-
-### Key Features Implemented
-- [x] GitHub API Integration with Authentication
-- [x] Sequential Data Processing (avoiding merge node issues)
-- [x] Comprehensive Repository Statistics
-- [x] Top Contributors Information
-- [x] Properly Formatted Slack Messages
-- [x] Error Handling and Rate Limit Management
-- [x] Docker Containerization
-- [x] Security Best Practices
